@@ -69,23 +69,19 @@ Route::prefix('work')->group(function () {
 //ReportController
 Route::prefix('report')->group(function() {
     Route::get('/reportNewSearch', [ReportController::class, 'reportNewSearch'])->name('report.reportNewSearch');
-    Route::get('/reportNewSearchNoWhole', [ReportController::class, 'reportNewSearchNoWhole'])->name('report.reportNewSearchNoWhole');
     Route::get('/reportStockSearch', [ReportController::class, 'reportStockSearch'])->name('report.reportStockSearch');
-    Route::get('/reportStockSearchNoWhole', [ReportController::class, 'reportStockSearchNoWhole'])->name('report.reportStockSearchNoWhole'); 
-    Route::get('/reportOutputSearch', [ReportController::class, 'reportOutputSearch'])->name('report.reportOutputSearch');
-    Route::get('/reportOutputSearchNoWhole', [ReportController::class, 'reportOutputSearchNoWhole'])->name('report.reportOutputSearchNoWhole'); 
-    Route::get('/reportWithdrawalSearch', [ReportController::class, 'reportWithdrawalSearch'])->name('report.reportWithdrawalSearch');
-    Route::get('/reportWithdrawalSearchNoWhole', [ReportController::class, 'reportWithdrawalSearchNoWhole'])->name('report.reportWithdrawalSearchNoWhole'); 
-    Route::get('/reportTotalSearch', [ReportController::class, 'reportTotalSearch'])->name('report.reportTotalSearch');
-    Route::get('/reportTotalSearchNoWhole', [ReportController::class, 'reportTotalSearchNoWhole'])->name('report.reportTotalSearchNoWhole');   
-    Route::get('/reporWarrantySearch', [ReportController::class, 'reporWarrantySearch'])->name('report.reporWarrantySearch');
-    Route::get('/reportWarrantySearchNoWhole', [ReportController::class, 'reportWarrantySearchNoWhole'])->name('report.reportWarrantySearchNoWhole');     
-    Route::get('/clientTotalSearch', [ReportController::class, 'clientTotalSearch'])->name('report.clientTotalSearch');
-    Route::get('/clientTotalSearchNoWhole', [ReportController::class, 'clientTotalSearchNoWhole'])->name('report.clientTotalSearchNoWhole');                                    
+    Route::get('/reportOutputSimple', [ReportController::class, 'reportOutputSimple'])->name('report.reportOutputSimple');
+    Route::get('/recallAfterRelease', [ReportController::class, 'recallAfterRelease'])->name('report.recallAfterRelease'); 
+    Route::get('/recallStat', [ReportController::class, 'recallStat'])->name('report.recallStat'); 
+    Route::get('/aftetServiceStat', [ReportController::class, 'aftetServiceStat'])->name('report.aftetServiceStat'); 
+    Route::get('/aggregateByWhole', [ReportController::class, 'aggregateByWhole'])->name('report.aggregateByWhole'); 
+
 });
 
 //BondController
 Route::prefix('bond')->group(function() {
+    Route::get('/bondPublish', [BondController::class, 'bondPublish'])->name('bond.bondPublish');
+    Route::get('/bondPublishDetail', [BondController::class, 'bondPublishDetail'])->name('bond.bondPublishDetail');
     Route::get('/{wholesaleCode}', [BondController::class, 'wholeSearch'])->name('bond.wholeSearch');
     Route::get('/{wholesaleCode}/{date}', [BondController::class, 'wholeSearchByDate'])->name('bond.wholeSearchByDate');
 });

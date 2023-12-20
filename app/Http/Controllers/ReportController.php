@@ -6,212 +6,209 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Session;
 
 class ReportController extends Controller
 {
-    // 24 - 1 신품발행 조회 (사용자가 날짜 + 도매장 전부입력했을때)
+    // 발행 ppt 12
     public function reportNewSearch(Request $request) {
-        DB::enableQueryLog();
+        $wholeName = $request->wholeName ?? '';
+        $empGroup =  Session::get('empGroup');
+        if($empGroup == "C") { // 냉동회사의 경우
+            $empCode = '';
+        } else { // 수리기사의 경우
+            $empCode = Session::get('empCode');
+        }
 
-        $sql = "SELECT 
-        g.REG_DATE ,s.STORE_NAME ,s.STORE_ADDRESS ,s.STORE_PHONE
-        ,g.GOODS_NAME ,g.GOODS_TYPE ,g.note ,g.PURCH_COST      
-        FROM 
-        T_MASTER_GOODS g, T_MASTER_STORE s, T_MASTER_WHOLESALE w 
-        WHERE g.WHOLE_CODE = s.WHOLE_CODE AND w.WHOLE_CODE = s.WHOLE_CODE AND w.ICE_CODE = s.ICE_CODE
-        AND g.REG_DATE >= ? AND g.REG_DATE <= ? AND w.WHOLE_NAME LIKE ? ";
-        $reportNewSearch = DB::select($sql , [$request->startDate, $request->lastDate,"%{$request->wholeName}%"]);
-        var_export(DB::getQueryLog()); die();
+        $newPurchStat = DB::table('T_FIX_COST','fc')
+        ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->join('T_MASTER_GOODS as mg', 'wc.GOODS_CODE', '=', 'mg.GOODS_CODE')
+        ->join('T_MASTER_EMP as me', 'wc.EMP_CODE', '=', 'me.EMP_CODE')
+        ->select("fc.REG_DATE","ms.STORE_NAME","ms.STORE_ADDRESS","ms.STORE_PHONE","mg.GOODS_NAME"
+        ,"mg.GOODS_MODEL_YEAR","mg.GOODS_DIV","ms.NOTE","fc.SALES_COST" )
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%{$wholeName}%")
+        ->where("me.EMP_CODE", $empCode)
+        ->orderBy('fc.IDX', 'asc')
+        ->get();
         
-        $response = array('response' => ["message"=> "발행-신품 : 조회일자 + 도매장 으로 검색", "data"=> $reportNewSearch], 'success'=> true);
-        return Response::json($response, 200);
-    }
-    // 24 - 2 신품발행 조회 (사용자가 날짜만 입력시)
-    public function reportNewSearchNoWhole(Request $request) {
-        $sql = "SELECT 
-        g.REG_DATE ,s.STORE_NAME ,s.STORE_ADDRESS ,s.STORE_PHONE
-        ,g.GOODS_NAME ,g.GOODS_TYPE ,g.note ,g.PURCH_COST      
-        FROM 
-        T_MASTER_GOODS g, T_MASTER_STORE s  
-        WHERE g.WHOLE_CODE = s.WHOLE_CODE AND g.ICE_CODE = s.ICE_CODE
-        AND g.REG_DATE >= ? AND g.REG_DATE <= ? ";
-        $reportNewSearch = DB::select($sql , [$request->startDate, $request->lastDate]);
-        $response = array('response' => ["message"=> "발행-신품 : 조회일자로 검색", "data"=> $reportNewSearch], 'success'=> true);
+        $response = array('response' => ["message"=> "발행-신품 : 조회일자 + 도매장 으로 검색", "data"=> $newPurchStat], 'success'=> true);
         return Response::json($response, 200);
     }
 
-    //25 -1 발행 = 재고현황 조회 (날짜 + 도매장)
+    // ppt 13 재고현황 조회 (날짜 + 도매장)
     public function reportStockSearch(Request $request) {
-        DB::enableQueryLog();
-        $stock = DB::table('T_MASTER_GOODS','g')
-        ->join('T_MASTER_STORE AS s', 'g.WHOLE_CODE','=','s.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE AS w', 'w.WHOLE_CODE', '=', 's.WHOLE_CODE')
-        ->join('T_MASTER_FIX as f', 'f.REG_ID', '=', 's.REG_ID')
-        ->select("s.STORE_NAME","g.REG_DATE","s.STORE_ADDRESS","s.STORE_PHONE","g.GOODS_NAME"
-        ,"g.GOODS_MODEL_YEAR","g.NOTE","f.SALES_COST","f.PURCH_COST" )
-        ->whereColumn('g.ICE_CODE','=','s.ICE_CODE')
-        ->whereRaw("s.REG_DATE >= ? AND s.REG_DATE <= ? AND w.WHOLE_NAME LIKE ? ",[$request->startDate, $request->lastDate,"%$request->storeName%"])
+        $wholeName = $request->wholeName ?? '';
+
+        $stockStat = DB::table('T_FIX_COST','fc')
+        ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->join('T_MASTER_GOODS as mg', 'wc.GOODS_CODE', '=', 'mg.GOODS_CODE')
+        ->join('T_MASTER_EMP as me', 'wc.EMP_CODE', '=', 'me.EMP_CODE')
+        ->select("fc.REG_DATE","ms.STORE_NAME","ms.STORE_PHONE","mg.GOODS_NAME","mg.GOODS_MODEL_YEAR"
+        ,"wc.WORK_TXT","fc.FIX_NAME","fc.SALES_COST")
+        ->selectRaw("(CASE wc.WORK_CODE 
+        WHEN 00 THEN '판매' WHEN 10 THEN '입고' WHEN 20 THEN '수리대기' WHEN 21 THEN '수리완료' WHEN 90 THEN '폐기'
+        WHEN 29 THEN '수리불가' WHEN 30 THEN '출고' WHEN 40 THEN '현장수리' WHEN 41 THEN '외주위탁수리'
+        ELSE wc.WORK_CODE END) AS WORK_CODE")
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%$wholeName%")
+        ->orderBy('fc.IDX', 'asc')
         ->get();
-        var_export(DB::getQueryLog()); die();
-        $response = array('response' => ["message"=> "재고현황 : 조회일자 + 도매장명 으로 검색", "data"=> $stock], 'success'=> true);
+        $response = array('response' => ["message"=> "재고현황 : 조회일자 + 도매장명 으로 검색", "data"=> $stockStat], 'success'=> true);
         return Response::json($response, 200);
     }
 
-    
+    // ppt 15 중고품 간편출고 현황
+    public function reportOutputSimple(Request $request) {
+        $wholeName = $request->wholeName ?? '';
+        $empGroup =  Session::get('empGroup');
+        if($empGroup == "C") { // 냉동회사의 경우
+            $empCode = '';
+        } else { // 수리기사의 경우
+            $empCode = Session::get('empCode');
+        }
 
-    //25 -2 발행 재고현황 조회(날짜만)
-    public function reportStockSearchNoWhole(Request $request) {
-        $stock = DB::table('T_MASTER_GOODS','g')
-        ->join('T_MASTER_STORE AS s', 'g.WHOLE_CODE','=','s.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE AS w', 'w.WHOLE_CODE', '=', 's.WHOLE_CODE')
-        ->join('T_MASTER_FIX as f', 'f.REG_ID', '=', 's.REG_ID')
-        ->select("s.STORE_NAME","g.REG_DATE","s.STORE_ADDRESS","s.STORE_PHONE","g.GOODS_NAME"
-        ,"g.GOODS_MODEL_YEAR","g.NOTE","f.SALES_COST","f.PURCH_COST" )
-        ->whereColumn('g.ICE_CODE','=','s.ICE_CODE')
-        ->where([
-            ['s.REG_DATE', '>=', $request->startDate],
-            ['s.REG_DATE', '<=', $request->lastDate],
-        ])->get();
-        var_export(DB::getQueryLog()); die();
-
-        $response = array('response' => ["message"=> "재고현황 : 조회일자로 검색", "data"=> $stock], 'success'=> true);
-        return Response::json($response, 200);
-    }
-    // 발행 간편출고 현황(날짜 + 도매장)
-    public function reportOutputSearch(Request $request) {
-        DB::enableQueryLog();
-        $simpleOutput = DB::table('T_FIX_COST','fc')
+        $simpleRelease  = DB::table('T_FIX_COST','fc')
         ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
-        ->join('T_MASTER_STORE as ms', 'ms.STORE_CODE', '=', 'wc.STORE_CODE')
-        ->join('T_MASTER_GOODS as mg', 'ms.WHOLE_CODE', '=', 'mg.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE as mw', 'ms.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
-        ->select("fc.REG_DATE","wc.STORE_NAME","ms.STORE_ADDRESS"
-        ,"mg.GOODS_NAME","mg.GOODS_MODEL_YEAR","WORK_TXT","fc.FIX_NAME","fc.PURCH_COST")
-        ->whereColumn('ms.ICE_CODE','=','wc.ICE_CODE')
-        ->where([
-            ['mg.REG_DATE', '>=', $request->startDate],
-            ['mg.REG_DATE', '<=', $request->lastDate],
-            ['mw.WHOLE_NAME', 'like', "%$request->wholeName%"],
-        ])->get();
-
-        $response = array('response' => ["message"=> "간편출고현황 날짜 + 도매장 검색", "data"=> $simpleOutput], 'success'=> true);
-        return Response::json($response, 200);
-    }
-    // 발행 간편출고 현황(날짜만)
-    public function reportOutputSearchNoWhole(Request $request) {
-        $simpleOutput = DB::table('T_FIX_COST','fc')
-        ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
-        ->join('T_MASTER_STORE as ms', 'ms.STORE_CODE', '=', 'wc.STORE_CODE')
-        ->join('T_MASTER_GOODS as mg', 'ms.WHOLE_CODE', '=', 'mg.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE as mw', 'ms.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
-        ->select("fc.REG_DATE","wc.STORE_NAME","ms.STORE_ADDRESS"
-        ,"mg.GOODS_NAME","mg.GOODS_MODEL_YEAR","WORK_TXT","fc.FIX_NAME","fc.PURCH_COST")
-        ->whereColumn('mg.ICE_CODE','=','ms.ICE_CODE')
-        ->whereDate('mg.REG_DATE', '>=', $request->startDate)
-        ->whereDate('mg.REG_DATE', '<=', $request->lastDate)
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->join('T_MASTER_GOODS as mg', 'wc.GOODS_CODE', '=', 'mg.GOODS_CODE')
+        ->join('T_MASTER_EMP as me', 'wc.EMP_CODE', '=', 'me.EMP_CODE')
+        ->select("fc.REG_DATE","ms.STORE_CODE","ms.STORE_ADDRESS","mg.GOODS_NAME","mg.GOODS_MODEL_YEAR"
+        ,"wc.WORK_CODE","wc.WORK_TXT","wc.WORK_MANAGE","fc.FIX_NAME","fc.SALES_COST" )
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%{$wholeName}%")
+        ->where("me.EMP_CODE", $empCode)
+        ->orderBy('fc.IDX', 'asc')
         ->get();
-        $response = array('response' => ["message"=> "간편출고현황 날짜 검색", "data"=> $simpleOutput], 'success'=> true);
+
+        $response = array('response' => ["message"=> "간편출고현황 검색", "data"=> $simpleRelease], 'success'=> true);
         return Response::json($response, 200);
     }
 
-    // 발행 중고품 출고 현황(날짜 + 도매장)
-    public function reportWithdrawalSearch(Request $request) {
-        $output = DB::table('T_FIX_COST','fc')
-        ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
-        ->join('T_MASTER_STORE as ms', 'ms.STORE_CODE', '=', 'wc.STORE_CODE')
-        ->join('T_MASTER_GOODS as mg', 'ms.WHOLE_CODE', '=', 'mg.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE as mw', 'ms.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
-        ->select("fc.REG_DATE","wc.STORE_NAME","ms.STORE_ADDRESS","wc.WORK_MANAGE"
-        ,"mg.GOODS_NAME","mg.GOODS_MODEL_YEAR","WORK_TXT","fc.FIX_NAME","fc.PURCH_COST")
-        ->whereColumn('mg.ICE_CODE','=','ms.ICE_CODE')
-        ->where([
-            ['mg.REG_DATE', '>=', $request->startDate],
-            ['mg.REG_DATE', '<=', $request->lastDate],
-            ['mw.WHOLE_NAME', 'like', "%$request->wholeName%"],
-        ])->get();
+    // ppt 16 중고품 회수출고 현황
+    public function recallAfterRelease(Request $request) {
+        $wholeName = $request->wholeName ?? '';
+        $empGroup =  Session::get('empGroup');
+        if($empGroup == "C") { // 냉동회사의 경우
+            $empCode = '';
+        } else { // 수리기사의 경우
+            $empCode = Session::get('empCode');
+        }
 
-        $response = array('response' => ["message"=> "발행 중고품 출고 현황 날짜 + 도매장 검색", "data"=> $output], 'success'=> true);
-        return Response::json($response, 200);
-    }
-    // 발행 중고품 출고 현황(날짜만)
-    public function reportWithdrawalSearchNoWhole(Request $request) {
-        $output = DB::table('T_FIX_COST','fc')
+        $recallAfterRelease  = DB::table('T_FIX_COST','fc')
         ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
-        ->join('T_MASTER_STORE as ms', 'ms.STORE_CODE', '=', 'wc.STORE_CODE')
-        ->join('T_MASTER_GOODS as mg', 'ms.WHOLE_CODE', '=', 'mg.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE as mw', 'ms.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
-        ->select("fc.REG_DATE","wc.STORE_NAME","ms.STORE_ADDRESS","wc.WORK_MANAGE"
-        ,"mg.GOODS_NAME","mg.GOODS_MODEL_YEAR","WORK_TXT","fc.FIX_NAME","fc.PURCH_COST")
-        ->whereColumn('mg.ICE_CODE','=','ms.ICE_CODE')
-        ->whereDate('mg.REG_DATE', '>=', $request->startDate)
-        ->whereDate('mg.REG_DATE', '<=', $request->lastDate)
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->join('T_MASTER_GOODS as mg', 'wc.GOODS_CODE', '=', 'mg.GOODS_CODE')
+        ->join('T_MASTER_EMP as me', 'wc.EMP_CODE', '=', 'me.EMP_CODE')
+        ->select("fc.REG_DATE","ms.STORE_NAME","ms.STORE_ADDRESS","mg.GOODS_MODEL_YEAR","wc.WORK_CODE"
+        ,"wc.WORK_MANAGE","wc.WORK_TXT","fc.FIX_NAME","fc.SALES_COST","mg.GOODS_NAME" )
+        ->selectRaw("(CASE wc.WORK_CODE 
+        WHEN 00 THEN '판매' WHEN 10 THEN '입고' WHEN 20 THEN '수리대기' WHEN 21 THEN '수리완료' WHEN 90 THEN '폐기'
+        WHEN 29 THEN '수리불가' WHEN 30 THEN '출고' WHEN 40 THEN '현장수리' WHEN 41 THEN '외주위탁수리'
+        ELSE wc.WORK_CODE END) AS WORK_CODE")
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%{$wholeName}%")
+        ->where("me.EMP_CODE", $empCode)
+        ->orderBy('fc.IDX', 'asc')
         ->get();
-        $response = ['response' => ["message"=> "발행 중고품 출고 현황 날짜 검색", "data"=> $output], 'success'=> true];
+
+        $response = array('response' => ["message"=> "회수출고 현황 검색", "data"=> $recallAfterRelease], 'success'=> true);
         return Response::json($response, 200);
     }
-    
-     // 중고품 회수 현황(날짜 + 도매장)
-     public function reporWarrantySearch(Request $request) {
-        $withdraw = DB::table('T_FIX_COST','fc')
+
+    // ppt 16 중고품 회수현황
+    public function recallStat(Request $request) {
+        $wholeName = $request->wholeName ?? '';
+        $empGroup =  Session::get('empGroup');
+        if($empGroup == "C") { // 냉동회사의 경우
+            $empCode = '';
+        } else { // 수리기사의 경우
+            $empCode = Session::get('empCode');
+        }
+
+        $recallStat  = DB::table('T_FIX_COST','fc')
         ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
-        ->join('T_MASTER_STORE as ms', 'ms.STORE_CODE', '=', 'wc.STORE_CODE')
-        ->join('T_MASTER_GOODS as mg', 'ms.WHOLE_CODE', '=', 'mg.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE as mw', 'ms.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
-        ->select("fc.REG_DATE","wc.STORE_NAME","ms.STORE_ADDRESS","wc.WORK_MANAGE","mg.GOODS_DIV"
-        ,"mg.GOODS_NAME","mg.GOODS_MODEL_YEAR","WORK_TXT","fc.FIX_NAME","fc.PURCH_COST")
-        ->whereColumn('mg.ICE_CODE','=','ms.ICE_CODE')
-        ->where([
-            ['mg.REG_DATE', '>=', $request->startDate],
-            ['mg.REG_DATE', '<=', $request->lastDate],
-            ['mw.WHOLE_NAME', 'like', "%$request->wholeName%"],
-        ])->get();
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->join('T_MASTER_GOODS as mg', 'wc.GOODS_CODE', '=', 'mg.GOODS_CODE')
+        ->join('T_MASTER_EMP as me', 'wc.EMP_CODE', '=', 'me.EMP_CODE')
+        ->select("fc.REG_DATE","ms.STORE_NAME","ms.STORE_ADDRESS","ms.STORE_PHONE","mg.GOODS_MODEL_YEAR"
+        ,"wc.WORK_CODE","wc.WORK_MANAGE","wc.WORK_TXT","fc.FIX_NAME","fc.SALES_COST","mg.GOODS_NAME" )
+        ->selectRaw("(CASE wc.WORK_CODE 
+        WHEN 00 THEN '판매' WHEN 10 THEN '입고' WHEN 20 THEN '수리대기' WHEN 21 THEN '수리완료' WHEN 90 THEN '폐기'
+        WHEN 29 THEN '수리불가' WHEN 30 THEN '출고' WHEN 40 THEN '현장수리' WHEN 41 THEN '외주위탁수리'
+        ELSE wc.WORK_CODE END) AS WORK_CODE")
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%{$wholeName}%")
+        ->where("me.EMP_CODE", $empCode)
+        ->orderBy('fc.IDX', 'asc')
+        ->get();
 
-        $response = array('response' => ["message"=> "중고품 회수 현황 날짜 + 도매장 검색", "data"=> $withdraw], 'success'=> true);
+        $response = array('response' => ["message"=> "회수출고 현황 검색", "data"=> $recallStat], 'success'=> true);
         return Response::json($response, 200);
     }
-    // 중고품 회수 현황 회수 현황(날짜만)
-    public function reportWarrantySearchNoWhole(Request $request) {
-        $withdraw = DB::table('T_FIX_COST','fc')
+
+    // ppt 18 매출처별 집계현황
+    public function aggregateByWhole(Request $request) {
+
+        $wholeName = $request->wholeName ?? '';
+        $aggregateByWhole  = DB::table('T_FIX_COST','fc')
         ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
-        ->join('T_MASTER_STORE as ms', 'ms.STORE_CODE', '=', 'wc.STORE_CODE')
-        ->join('T_MASTER_GOODS as mg', 'ms.WHOLE_CODE', '=', 'mg.WHOLE_CODE')
-        ->join('T_MASTER_WHOLESALE as mw', 'ms.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
-        ->select("fc.REG_DATE","wc.STORE_NAME","ms.STORE_ADDRESS","wc.WORK_MANAGE","mg.GOODS_DIV"
-        ,"mg.GOODS_NAME","mg.GOODS_MODEL_YEAR","WORK_TXT","fc.FIX_NAME","fc.PURCH_COST")
-        ->whereColumn('mg.ICE_CODE','=','ms.ICE_CODE')
-        ->whereDate('mg.REG_DATE', '>=', $request->startDate)
-        ->whereDate('mg.REG_DATE', '<=', $request->lastDate)
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->selectRaw("count(fc.IDX) 건수, sum(fc.SALES_COST*0.9) 공급가
+        ,sum(fc.SALES_COST*0.1) 부가세 ,sum(fc.SALES_COST) 합계")
+        ->selectRaw("(CASE wc.WORK_CODE 
+        WHEN 00 THEN '판매' WHEN 10 THEN '입고' WHEN 20 THEN '수리대기' WHEN 21 THEN '수리완료' WHEN 90 THEN '폐기'
+        WHEN 29 THEN '수리불가' WHEN 30 THEN '출고' WHEN 40 THEN '현장수리' WHEN 41 THEN '외주위탁수리'
+        ELSE '합계' END) AS WORK_CODE")
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%{$wholeName}%")
+        ->groupByRaw('wc.WORK_CODE WITH ROLLUP')
         ->get();
-        $response = ['response' => ["message"=> "중고품 회수 현황 날짜 검색", "data"=> $withdraw], 'success'=> true];
+        $response = array('response' => ["message"=> "매출처별 집계현황 검색", "data"=> $aggregateByWhole], 'success'=> true);
         return Response::json($response, 200);
     }
 
-     // 매출처별 집계 현황(날짜 + 도매장)
-     public function clientTotalSearch(Request $request) {
-        $warranty = DB::table('T_MASTER_GOODS','g')
-        ->join('T_MASTER_STORE AS s', 'g.WHOLE_CODE','=','s.WHOLE_CODE')
-        ->join('T_MASTER_FIX as f', 'f.REG_ID', '=', 's.REG_ID')
-        ->select('s.*', 'g.*' ,'f.*' )
-        ->where([
-            ['g.REG_DATE', '>=', $request->startDate],
-            ['g.REG_DATE', '<=', $request->lastDate],
-            ['g.WHOLE_CODE', 'like', "%$request->wholeName%"],
-        ])->get();
+    // ppt 19 A/S 현황
+    public function aftetServiceStat(Request $request) {
+        $wholeName = $request->wholeName ?? '';
+        $empGroup =  Session::get('empGroup');
+        if($empGroup == "C") { // 냉동회사의 경우
+            $empCode = '';
+        } else { // 수리기사의 경우
+            $empCode = Session::get('empCode');
+        }
 
-        $response = array('response' => ["message"=> "매출처별 집계 현황 날짜 + 도매장 검색", "data"=> $warranty], 'success'=> true);
-        return Response::json($response, 200);
-    }
-    // 매출처별 집계 현황 현황(날짜만)
-    public function clientTotalSearchNoWhole(Request $request) {
-        $warranty = DB::table('T_MASTER_GOODS','g')
-        ->join('T_MASTER_STORE AS s', 'g.WHOLE_CODE','=','s.WHOLE_CODE')
-        ->join('T_MASTER_FIX as f', 'f.REG_ID', '=', 's.REG_ID')
-        ->select('s.*', 'g.*' ,'f.*' )
-        ->whereDate('g.REG_DATE', '>=', $request->startDate)
-        ->whereDate('g.REG_DATE', '<=', $request->lastDate)
+        $aftetServiceStat  = DB::table('T_FIX_COST','fc')
+        ->join('T_WORK_COMPLETE AS wc', 'wc.FIX_COST_IDX','=','fc.FIX_COST_IDX')
+        ->join('T_MASTER_ICE AS mi', 'wc.ICE_CODE', '=', 'mi.ICE_CODE')
+        ->join('T_MASTER_WHOLESALE as mw', 'wc.WHOLE_CODE', '=', 'mw.WHOLE_CODE')
+        ->join('T_MASTER_STORE as ms', 'wc.STORE_CODE', '=', 'ms.STORE_CODE')
+        ->join('T_MASTER_GOODS as mg', 'wc.GOODS_CODE', '=', 'mg.GOODS_CODE')
+        ->join('T_MASTER_EMP as me', 'wc.EMP_CODE', '=', 'me.EMP_CODE')
+        ->select("fc.REG_DATE","ms.STORE_NAME","ms.STORE_PHONE","mg.GOODS_MODEL_YEAR"
+        ,"wc.WORK_CODE","wc.WORK_MANAGE","wc.WORK_TXT","fc.FIX_NAME","fc.SALES_COST","mg.GOODS_NAME" )
+        ->whereBetween("fc.REG_DATE",[request('startDate'),request('endDate')])
+        ->where("mw.WHOLE_NAME",'like',"%{$wholeName}%")
+        ->where("me.EMP_CODE", $empCode)
         ->get();
-        $response = ['response' => ["message"=> "매출처별 집계 현황 날짜 검색", "data"=> $warranty], 'success'=> true];
+
+        $response = array('response' => ["message"=> "회수출고 현황 검색", "data"=> $aftetServiceStat], 'success'=> true);
         return Response::json($response, 200);
     }
 
+   
 }

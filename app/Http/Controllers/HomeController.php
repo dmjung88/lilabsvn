@@ -52,4 +52,10 @@ class HomeController extends Controller
         // Customer::doesntHave('orders')
         // User::query()->join('테이블B AS 별칭', '테이블A.ID','=','테이블B.ID','left outer')
     }
+    public function delete($id) {
+        DB::table('테이블')->where('idx', $id)->delete();
+        //SELECT IFNULL(컬럼,"null 대체문자") as 컬럼별칭, 
+        //SELECT COALESCE(컬럼,"null 대체문자") as 컬럼별칭, 
+        //https://employee.tistory.com/entry/Laravel-public-folder를-publichtml로-변경
+    }
 }

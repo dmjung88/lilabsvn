@@ -3,15 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SignUpController;
 use App\Http\Controllers\TaxController;
+use App\Http\Controllers\EmpLoginController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
+| Route::get('/URL',['as'=>'prfix.method', 'uses'=>'Controller@method']);
+| Route::post('/URL','Controller@index')->name('prfix.index');
 |
 */
 
@@ -31,6 +31,10 @@ Route::prefix('auth')->name('auth.')->middleware(['authCheck'])->group(function 
     Route::post('/register',[SignUpController::class, 'postRegister'])->name('postRegister');
     Route::match(['get','post'], '/logout',[SignUpController::class, 'logout'])->name('logout');
 });
+
+//로그인 
+Route::get('/personalLogin',[EmpLoginController::class, 'personalLogin'])->name('personalLogin');
+Route::get('/companyLogin',[EmpLoginController::class, 'companyLogin'])->name('companyLogin');
 
 //데이터 엑셀다운
 Route::get('tax/exportToExcel',[TaxController::class, 'exportToExcel']);

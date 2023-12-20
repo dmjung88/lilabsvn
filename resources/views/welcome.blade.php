@@ -21,6 +21,14 @@
         </style>
     </head>
     <body class="antialiased">
+        @php
+            /**Carbon::now()->addHours(1)->subMiniutes(10)
+           * format()라라벨 date()PHP
+           * $시간1->diffInHours($시간2)
+           * 
+           * 
+        */
+        @endphp
         <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
             @if (Route::has('login'))
                 <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
