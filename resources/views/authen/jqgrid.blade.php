@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script> 
+
 {{-- 
     url : 데이터 API 요청을 보낼 주소를 입력
     mtype : API 요청 방식을 설정(get || post)
@@ -30,7 +31,21 @@
     autowidth: true,    // jQgrid width 자동100% 채워지게
     shrinkToFit: false,  // width를 자동설정 해주는 기능
 --}}
+<style>
+    body {
+        font-family: 'Nunito', sans-serif;
+    }
+    .ui-jqgrid.ui-jqgrid-bootstrap {
+        border: 1px solid #003380;
+    }
+    .ui-jqgrid.ui-jqgrid-bootstrap .ui-jqgrid-caption {
+        background-color: #e6f0ff;
+    }
+    .ui-jqgrid.ui-jqgrid-bootstrap .ui-jqgrid-hdiv {
+        background-color: #cce0ff;
+    }
 
+</style>
 </head>
 <body>
     <div class="tableWrap">
@@ -46,11 +61,11 @@
     });
     
     var searchResultColNames =  ['이름', '아티스트', '발매', '장르'];
-    var searchResultColModel =  [
+    var searchResultColModel =  [  
         {name:'name',   index:'name',   align:'center', hidden:true},
         {name:'artist', index:'artist', align:'left',   width:'24%'},
-        {name:'release',index:'release',align:'center', width:'50%'},
-        {name:'genre',  index:'genre',  align:'center', width:'26%'}
+        {name:"release",label:"Date",   align:"center", width:'50%', sortType: "date", formatter: "date", formatoptions: { newformat: "Y-m-d" } },
+        {name:"genre", width:'26%', align: "center", formatter: "select", formatoptions: { value: "Pop:팝;Hiphop:힙합;Rock:락", defaultValue: "Rock"}}
     ];
     $(document).ready(function(){
         "use strict";
@@ -64,6 +79,21 @@
             pager: "#pager",
             height: 261,
             width: 1019,
+            guiStyle: "bootstrap4", //부트스트랩사용
+            iconSet: "fontAwesome", //폰트어썸 사용
+            idPrefix: "gb1_",
+            rownumbers: true, //번호가 포함된 추가 열을 생성 
+            sortname: "invdate", //최신 날짜가 먼저 표시된
+            sortorder: "desc",
+            threeStateSort: true,
+            sortIconsBeforeText: true,
+            headertitles: true,
+            toppager: true,
+            pager: true,
+            viewrecords: true,
+            searching: {
+                defaultSearch: "cn"
+            },
             caption: "그리드"
         }); //endGRID
     }); //endJQ
@@ -73,6 +103,8 @@
     name : 'response 받아올 변수의 이름',
     index : 'jqGird안에서 접근할 이름',미지정시 name
     -key : 유일한 rowId값을 위해 id를 지정할 수 있습니다. 반드시 하나의 컬럼에만 지정해야하고, 유일한 값
+    -label : colNames 가 비어있을 때 컬럼의 제목을 정의한다. (단. colName 배열과 label 속성이 없을 경우 name으로 대체한다.)
+
     */
     
     /*

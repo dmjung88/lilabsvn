@@ -50,7 +50,7 @@ class GridController extends Controller
                 "name"=>"JQ 1",
                 "artist"=>"JQ 1" ,
                 "release"=>"2016.03.26",
-                "genre"=>"Pop"
+                "genre"=>""
             ],
             [
                 "name"=>"JQ 2",
@@ -64,6 +64,24 @@ class GridController extends Controller
                 "release"=>"2016.03.26",
                 "genre"=>"Pop"
             ],
+            [
+                "name"=>"JQ 4",
+                "artist"=>"JQ 4" ,
+                "release"=>"2016.03.26",
+                "genre"=>"Rock"
+            ],
+            [
+                "name"=>"JQ 5",
+                "artist"=>"JQ 5" ,
+                "release"=>"2016.03.26",
+                "genre"=>"Hiphop"
+            ],
+            [
+                "name"=>"JQ 6",
+                "artist"=>"JQ 6" ,
+                "release"=>"2016.03.26",
+                "genre"=>"Pop"
+            ]
         ];
         return response()->json(["rows" => $data]); 
         /** 반환 타입
