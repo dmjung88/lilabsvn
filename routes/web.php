@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SignUpController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\EmpLoginController;
+use App\Http\Controllers\GridController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,3 +47,10 @@ Route::get('tax/eMailSend',[TaxController::class, 'eMailSend']);
 //email + pdf 보내기
 //https://www.youtube.com/watch?v=60jEIQ8LtS0
 Route::get('tax/attachSend',[TaxController::class, 'attachSend']);
+
+//토스트 JQ UI grid
+Route::get('front/toastuigrid',[GridController::class, 'toastuigrid']);
+Route::get('front/gridData',[GridController::class, 'gridData'])->name('front.gridData');
+Route::get('front/jqgrid',[GridController::class, 'jqgrid']);
+Route::get('front/jqgriddata',[GridController::class, 'jqgriddata'])->name('jqgriddata');;
+Route::get('front/officialgrid',[GridController::class, 'officialgrid']);

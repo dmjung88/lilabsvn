@@ -13,7 +13,7 @@ class Master extends Model
     protected $guarded = [ ];
     //protected $primaryKey = 'id';
     //protected $fillable = [ '*' ];
-    protected $table = 'MASTER_WHOLESALE';
+    protected $table = 'T_MASTER_ICE';
     public $incrementing = false;
 
     //W : 도매장코드, S : 업소코드, G : 상품코드, F : 수리코드, C :회사코드, E : 사번

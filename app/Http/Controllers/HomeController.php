@@ -57,5 +57,7 @@ class HomeController extends Controller
         //SELECT IFNULL(컬럼,"null 대체문자") as 컬럼별칭, 
         //SELECT COALESCE(컬럼,"null 대체문자") as 컬럼별칭, 
         //https://employee.tistory.com/entry/Laravel-public-folder를-publichtml로-변경
+        //라라벨 배포 - url에 public없애는 방법 
+        // redirect()->route()
     }
 }

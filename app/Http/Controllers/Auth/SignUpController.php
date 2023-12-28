@@ -73,8 +73,8 @@ class SignUpController extends Controller
             //Session::forget('LoggedUserName');
             Session::flush();
             //Auth::logout();
+            //throw new Exception("예외내용.");
             return redirect('/auth/login');
         }
     }
-
 }
