@@ -33,36 +33,37 @@ class MasterController extends Controller
 
     public function wholesaleSave(Request $request) { // 도매장 저장
         $validator = Validator::make($request->all(), [ // Form_validation
-            'wholeName'  => 'required|max:30|string',
-            'wholePhone' => 'required|max:11|regex:/^[가-힣\s]+/|',
+            'wholeName'  => 'required|max:30|string|regex:/^[가-힣\s]+/',
+            'wholePhone' => 'required|max:13|min:8',
             'wholeCeo'  => 'required|max:10',
             'wholeBiz'   => 'required|max:10',
-            'wholeBizNum' => 'required',
-            'wholeType'  => 'required',
-            'wholeAddress' => 'required',
-            'wholeZipcode' => 'required',
-            'wholeEmail' => 'required',
-            'wholeUseYN' => 'required',
-            'note'       => 'required',
-            'add1'       => 'required',
+            'wholeBizNum' => 'required|max:10|unique:T_MASTER_WHOLESALE,WHOLE_BIZ_NUM',
+            'wholeType'  => 'required|max:10',
+            'addr' => 'required',
+            'addrDetail' => 'required',
+            'wholeZipcode' => 'required|max:7',
+            'wholeEmail' => 'required|email',
+            'chk_status' => 'required',
+
         ]);
         $response = array('response' => '', 'success'=> false);
         if ($validator->fails()) {
             $response['response'] = $validator->messages();
-        } else {
-            DB::table('MASTER_WHOLESALE')->insert([
-                'ICE_CODE' => $request->input('iceCode'),
+        } else {  
+            DB::table('T_MASTER_WHOLESALE')->insert([
+                'ICE_CODE' => "C0001",
                 'WHOLE_CODE' => "W" . Master::wCodeSeq(),
                 'WHOLE_NAME' => $request->input('wholeName'),
-                'WHOLE_PHONE' => $request->input('wholePhone'),
+                'WHOLE_PHONE' => str_replace('-', '',$request->input('wholePhone')),
                 'WHOLE_CEO' => $request->input('wholeCeo'),
                 'WHOLE_BIZ' => $request->input('wholeBiz'),
                 'WHOLE_BIZ_NUM' => $request->input('wholeBizNum'),
                 'WHOLE_TYPE' => $request->input('wholeType'),
-                'WHOLE_ADDRESS' => $request->input('wholeAddress'),
+                'WHOLE_ADDRESS' => $request->addr.' '.$request->addrDetail,
                 'WHOLE_ZIPCODE' => $request->input('wholeZipcode'),
                 'WHOLE_EMAIL' => $request->input('wholeEmail'),
-                'WHOLE_USEYN' => $request->input('wholeUseYN'),
+                'WHOLE_USEYN' => $request->input('chk_status'),
+                'REG_ID' => '등록자',
                 'NOTE' => $request->input('note'),
                 'ADD1' => $request->input('add1'),
             ]);
@@ -390,7 +391,20 @@ class MasterController extends Controller
 
     // 여기부터 return View
     public function wholeAddView() {
-        return view('master.wholeAdd',);
+        return view('master.wholeAdd',["title" => "도매장 저장" ]);
+    }
+
+    
+    // 사업자번호 중복 체크
+    public function bizNumCheck (Request $request) {
+        $bizNumCheck = DB::table('T_MASTER_WHOLESALE')
+        ->where('WHOLE_BIZ_NUM',$request->wholeBizNum)
+        ->count();
+        if($bizNumCheck > 0) {
+            echo "fail";
+        }else {
+            echo "중복이 아닙니다";
+        }
     }
 
 }

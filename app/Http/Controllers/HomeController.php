@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class HomeController extends Controller
 {
@@ -13,7 +14,7 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        //$this->middleware('auth');
     }
 
     /**
@@ -59,5 +60,9 @@ class HomeController extends Controller
         //https://employee.tistory.com/entry/Laravel-public-folder를-publichtml로-변경
         //라라벨 배포 - url에 public없애는 방법 
         // redirect()->route()
+    }
+    public function modelCustomMethod() {
+        $model = new User();
+        die($model->custom);
     }
 }

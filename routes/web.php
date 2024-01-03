@@ -22,7 +22,7 @@ Route::any('/', function () {
 });
 
 //Auth::routes();
-
+Route::any('/model/CustomMethod', [App\Http\Controllers\HomeController::class, 'modelCustomMethod']);
 Route::any('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/admin/dashboard',[SignUpController::class, 'dashboard'])->middleware('authCheck');
 
@@ -58,6 +58,7 @@ Route::get('front/officialgrid',[GridController::class, 'officialgrid']);
 Route::get('front/buttonData',[GridController::class, 'buttonData']);
 
 // 마스터 return View
-Route::prefix('master')->group(function() {
+Route::prefix('master')->group(function() {  
     Route::get('wholeAdd',[MasterController::class, 'wholeAddView'])->name('master.wholeAdd');
+    Route::post('bizNumCheck',[MasterController::class, 'bizNumCheck'])->name('master.bizNumCheck');
 });

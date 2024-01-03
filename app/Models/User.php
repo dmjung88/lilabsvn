@@ -47,4 +47,9 @@ class User extends Authenticatable
         ->get()->toArray();
         return $result;
     }
+
+    public function getCustomAttribute()
+    {
+        return '모델 커스텀 함수';
+    }
 }

@@ -19,7 +19,7 @@ class Master extends Model
     //W : 도매장코드, S : 업소코드, G : 상품코드, F : 수리코드, C :회사코드, E : 사번
     public static  function  wCodeSeq() :string
     {       
-        $wCount =DB::table('MASTER_WHOLESALE')->count();
+        $wCount =DB::table('T_MASTER_WHOLESALE')->count();
         $length = strlen( $wCount );
         switch ($length) {
             case 1: return "000".$wCount + 1; break;
@@ -31,7 +31,7 @@ class Master extends Model
     }
     public static  function  sCodeSeq() :string
     {       
-        $wCount =DB::table('MASTER_STORE')->count();
+        $wCount =DB::table('T_MASTER_STORE')->count();
         $length = strlen( $wCount );
         switch ($length) {
             case 1: return "000".$wCount + 1; break;
@@ -43,7 +43,7 @@ class Master extends Model
     }
     public static  function  gCodeSeq() :string
     {       
-        $wCount =DB::table('MASTER_GOODS')->count();
+        $wCount =DB::table('T_MASTER_GOODS')->count();
         $length = strlen( $wCount );
         switch ($length) {
             case 1: return "000".$wCount + 1; break;
@@ -55,7 +55,7 @@ class Master extends Model
     }
     public static  function  fCodeSeq() :string
     {       
-        $wCount =DB::table('MASTER_FIX')->count();
+        $wCount =DB::table('T_MASTER_FIX')->count();
         $length = strlen( $wCount );
         switch ($length) {
             case 1: return "000".$wCount + 1; break;
@@ -67,7 +67,7 @@ class Master extends Model
     }
     public static  function  cCodeSeq() :string
     {       
-        $wCount =DB::table('MASTER_ICE')->count();
+        $wCount =DB::table('T_MASTER_ICE')->count();
         $length = strlen( $wCount );
         switch ($length) {
             case 1: return "000".$wCount + 1; break;
@@ -79,7 +79,7 @@ class Master extends Model
     }
     public static  function  eCodeSeq() :string
     {       
-        $wCount =DB::table('MASTER_EMP')->count();
+        $wCount =DB::table('T_MASTER_EMP')->count();
         $length = strlen( $wCount );
         switch ($length) {
             case 1: return "000".$wCount + 1; break;
@@ -89,4 +89,5 @@ class Master extends Model
         }
         exit;
     }
+
 }
