@@ -62,7 +62,7 @@ class HomeController extends Controller
         // redirect()->route()
     }
     public function modelCustomMethod() {
-        $model = new User();
+        $model = new User(); //() 없어야함
         die($model->custom);
     }
 }

@@ -52,4 +52,5 @@ class User extends Authenticatable
     {
         return '모델 커스텀 함수';
     }
+
 }
