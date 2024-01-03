@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SignUpController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\EmpLoginController;
 use App\Http\Controllers\GridController;
+use App\Http\Controllers\MasterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +21,7 @@ Route::any('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+//Auth::routes();
 
 Route::any('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/admin/dashboard',[SignUpController::class, 'dashboard'])->middleware('authCheck');
@@ -54,3 +55,9 @@ Route::get('front/gridData',[GridController::class, 'gridData'])->name('front.gr
 Route::get('front/jqgrid',[GridController::class, 'jqgrid']);
 Route::get('front/jqgriddata',[GridController::class, 'jqgriddata'])->name('jqgriddata');;
 Route::get('front/officialgrid',[GridController::class, 'officialgrid']);
+Route::get('front/buttonData',[GridController::class, 'buttonData']);
+
+// 마스터 return View
+Route::prefix('master')->group(function() {
+    Route::get('wholeAdd',[MasterController::class, 'wholeAddView'])->name('master.wholeAdd');
+});

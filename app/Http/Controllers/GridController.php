@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
+use DB;
 
 class GridController extends Controller
 {
@@ -45,44 +47,9 @@ class GridController extends Controller
     }
 
     public function jqgriddata() {
-        $data = [
-            [
-                "name"=>"JQ 1",
-                "artist"=>"JQ 1" ,
-                "release"=>"2016.03.26",
-                "genre"=>""
-            ],
-            [
-                "name"=>"JQ 2",
-                "artist"=>"JQ 2" ,
-                "release"=>"2016.03.26",
-                "genre"=>"Pop"
-            ],
-            [
-                "name"=>"JQ 33",
-                "artist"=>"JQ 3" ,
-                "release"=>"2016.03.26",
-                "genre"=>"Pop"
-            ],
-            [
-                "name"=>"JQ 4",
-                "artist"=>"JQ 4" ,
-                "release"=>"2016.03.26",
-                "genre"=>"Rock"
-            ],
-            [
-                "name"=>"JQ 5",
-                "artist"=>"JQ 5" ,
-                "release"=>"2016.03.26",
-                "genre"=>"Hiphop"
-            ],
-            [
-                "name"=>"JQ 6",
-                "artist"=>"JQ 6" ,
-                "release"=>"2016.03.26",
-                "genre"=>"Pop"
-            ]
-        ];
+        $data = DB::table('test')
+        ->selectRaw("NAME_T,ARTIST_T,RELEASE_T,GENRE_T")
+        ->get();
         return response()->json(["rows" => $data]); 
         /** 반환 타입
          * {"page":"1",
@@ -97,5 +64,12 @@ class GridController extends Controller
 
     public function officialgrid() {
         return view('authen.officialgrid');
+    }
+    public function buttonData() {
+        $data = DB::table('test')
+        ->selectRaw("NAME_T,ARTIST_T,RELEASE_T,GENRE_T")
+        ->get();
+        echo json_encode($data);
+        //return Response::json($data);
     }
 }

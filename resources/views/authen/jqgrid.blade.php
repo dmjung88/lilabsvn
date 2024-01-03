@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
 
 {{-- 
     url : 데이터 API 요청을 보낼 주소를 입력
@@ -44,13 +44,21 @@
     .ui-jqgrid.ui-jqgrid-bootstrap .ui-jqgrid-hdiv {
         background-color: #cce0ff;
     }
+    .ui-search-input > input::-ms-clear {
+        display: none;
+    }
 
 </style>
 </head>
 <body>
     <div class="tableWrap">
         <table id="mainGrid"></table>
-        <div id="pager"></div>    
+        <div id="gridPager"></div>    
+    </div>
+    <button type="button">버튼</button>
+    <div class="tableWrap2">
+        <table id="mainGrid2"></table>
+        <div id="gridPager2"></div>    
     </div>
 <script>
 
@@ -62,11 +70,12 @@
     
     var searchResultColNames =  ['이름', '아티스트', '발매', '장르'];
     var searchResultColModel =  [  
-        {name:'name',   index:'name',   align:'center', hidden:true},
-        {name:'artist', index:'artist', align:'left',   width:'24%'},
-        {name:"release",label:"Date",   align:"center", width:'50%', sortType: "date", formatter: "date", formatoptions: { newformat: "Y-m-d" } },
-        {name:"genre", width:'26%', align: "center", formatter: "select", formatoptions: { value: "Pop:팝;Hiphop:힙합;Rock:락", defaultValue: "Rock"}}
+        {name:'NAME_T',   index:'NAME_T',   align:'center', hidden:true},
+        {name:'ARTIST_T', index:'ARTIST_T', align:'left',   width:'24%'},
+        {name:"RELEASE_T",label:"Date",   align:"center", width:'50%', sortType: "date", formatter: "date", formatoptions: { newformat: "Y-m-d" } },
+        {name:"GENRE_T", width:'26%', align: "center", formatter: "select", formatoptions: { value: "Pop:팝;Hiphop:힙합;Rock:락", defaultValue: "Rock"}}
     ];
+
     $(document).ready(function(){
         "use strict";
         $("#mainGrid").jqGrid({
@@ -75,15 +84,16 @@
             mtype: "get",
             colNames : searchResultColNames,
             colModel : searchResultColModel,
-            rowNum : 10,
-            pager: "#pager",
+            rowNum : 2,
+            rowList:[5,10,15],
+            pager: "#gridPager",
             height: 261,
             width: 1019,
             guiStyle: "bootstrap4", //부트스트랩사용
             iconSet: "fontAwesome", //폰트어썸 사용
             idPrefix: "gb1_",
             rownumbers: true, //번호가 포함된 추가 열을 생성 
-            sortname: "invdate", //최신 날짜가 먼저 표시된
+            sortname: "RELEASE_T", //최신 날짜가 먼저 표시된
             sortorder: "desc",
             threeStateSort: true,
             sortIconsBeforeText: true,
@@ -91,11 +101,70 @@
             toppager: true,
             pager: true,
             viewrecords: true,
+            loadonce: true, //필수 데이터 필수한번가져오기
             searching: {
-                defaultSearch: "cn"
+                defaultSearch: "cn" //contain 포함 연산자
             },
+            // loadComplete :function(data) { //로딩후
+            //     console.log("로딩끝")
+            // },
+            // onSelectRow : function(id) { //행 클릭시
+            //     console.log(id)
+            // },
+            // ondblClickRow :function(rowid, status, e) { //행 더블클릭시
+            //     console.log("더블클릭")
+            // },
             caption: "그리드"
         }); //endGRID
+        $("#mainGrid").jqGrid('navGrid',"#gridPager",{ edit:false,add:false,del:false });
+
+        //ajax 데이터 불러오기
+        $("button").click(function() {
+            $.ajax({
+                url :"{{ url('front/buttonData')}}",
+                method:"GET",
+                dataType: "JSON",
+                data :{},
+                contentType : "application/json; charset=UTF-8",
+                success:function(result) {
+                    //var result = $.parseJSON(result);
+                    console.dir(result);
+                    $("#mainGrid2").jqGrid({
+                        dataType:"local",
+                        colNames : searchResultColNames,
+                        colModel : searchResultColModel,
+                        data :result,
+                        rowNum : 3,
+                        rowList:[5,10,15],
+                        pager: "#gridPager2",
+                        height: "auto",
+                        guiStyle: "bootstrap4", //부트스트랩사용
+                        iconSet: "fontAwesome", //폰트어썸 사용
+                        idPrefix: "gb1_",
+                        rownumbers: true, //번호가 포함된 추가 열을 생성 
+                        sortname: "RELEASE_T", //최신 날짜가 먼저 표시된
+                        sortorder: "desc",
+                        threeStateSort: true,
+                        sortIconsBeforeText: true,
+                        headertitles: true,
+                        toppager: true,
+                        pager: true,
+                        viewrecords: true,
+                        loadonce: true, //필수 데이터 필수한번가져오기
+                        gridView :true,
+                        autowidth: true,
+                        altRows :true,
+                        hoverRows: true,
+                        caption: "가수명"
+
+                    });
+                    $("#mainGrid2").jqGrid('navGrid',"#gridPager2",{ edit:false,add:false,del:false });
+                },
+                error:function(err) {
+                    console.log(err)
+                }
+            })
+        });
     }); //endJQ
     /*  var postData = objConvertJson($("form")); //form 데이터 json으로 변경
     var formData = $('#FORM1').serialize();

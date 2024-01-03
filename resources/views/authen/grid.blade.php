@@ -68,6 +68,36 @@ $("button").click(function() {
         }
     })
 });
+/*
+이벤트 발생
+$.ajax({ 
+    type: "get or post",
+    url: "url()",
+    success: function (dataJson) {
+        //var json = JSON.parse(dataJson);
+        var json = $.parseJSON(dataJson);
+        //debugger;
+        $("#table").jqGrid({
+            data: json,
+            datatype: "JSON",
+            height: 'auto',
+            rowNum: 10,
+            rowList: [10, 20, 30],
+            colModel: [
+                { name: '이름', label: '알리아스',index: 'jqGird안에서 접근할 이름', width: 폭 },
+                { name: '이름', label: '별칭', index: 'jqGird안에서 접근할 이름', width: 숫자 }
+            ],
+            pager: "#페이지",
+            sortname: 'P_CODE',
+            viewrecords: true,
+            sortorder: "desc",            
+        });
+        jQuery("#table").jqGrid('navGrid', "#페이지", { edit: false, add: false, del: false });
+
+     
+    }
+});
+*/
 </script>
 </body>
 </html>

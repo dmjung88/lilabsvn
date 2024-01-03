@@ -387,4 +387,10 @@ class MasterController extends Controller
         }
         return Response::json($response, 201);
     }
+
+    // 여기부터 return View
+    public function wholeAddView() {
+        return view('master.wholeAdd',);
+    }
+
 }
